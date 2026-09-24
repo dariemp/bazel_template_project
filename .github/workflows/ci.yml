@@ -58,15 +58,6 @@ jobs:
       - name: "Rust: lint (Clippy)"
         run: bazel run //tools:prek -- run clippy --all-files
 
-      - name: "C/C++: toolchain diagnostics"
-        if: always()
-        run: |
-          xcode-select -p || true
-          bazel build //cpp/calculator:calculator --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type' 2>&1 | grep -i "selected" || true
-          bazel aquery 'mnemonic("CppCompile", //cpp/calculator:calculator)' | grep -E "Command Line|zig|isysroot|SDKs" || true
-          file bazel-bin/cpp/calculator/calculator_test || true
-          otool -L bazel-bin/cpp/calculator/calculator_test || true
-
       - name: "C/C++: format (clang-format)"
         run: bazel run //tools:prek -- run clang-format --all-files
 
@@ -94,6 +85,18 @@ jobs:
 
       - name: "C/C++: build + test"
         run: bazel test //c/... //cpp/...
+
+      - name: "C/C++: toolchain diagnostics"
+        if: always()
+        run: |
+          xcode-select -p || true
+          bazel build //cpp/calculator:calculator --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type' 2>&1 | grep -i "selected" || true
+          bazel aquery 'mnemonic("CppCompile", //cpp/calculator:calculator)' | grep -E "Command Line|zig|isysroot|SDKs" || true
+          file bazel-bin/cpp/calculator/calculator_test || true
+          otool -L bazel-bin/cpp/calculator/calculator_test || true
+          bash --version | head -1
+          bazel build //tools/cpp:clang_tidy && cat bazel-bin/tools/cpp/clang_tidy
+          bazel-bin/tools/cpp/clang_tidy c/calculator/calculator.c -- -xc -std=c11 -mcpu=apple_m1 -iquote . -v || true
 
       - name: "C/C++: format (clang-format)"
         run: bazel run //tools:prek -- run clang-format --all-files

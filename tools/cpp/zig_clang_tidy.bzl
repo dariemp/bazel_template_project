@@ -175,7 +175,7 @@ for a in "$@"; do
   case "$a" in
     # zig spells CPU names with underscores (the macOS arm64 toolchain adds
     # -mcpu=apple_m1); clang rejects those, so translate to clang's spelling.
-    -mcpu=*_*) a="${{a//_/-}}" ;;
+    -mcpu=*_*) a="$(printf '%s' "$a" | tr '_' '-')" ;;
   esac
   args+=("$a")
 done
