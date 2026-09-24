@@ -69,10 +69,17 @@ load("@rules_python//python:defs.bzl", "py_library")
 
 package(default_visibility = ["//visibility:public"])
 
+_NATIVE_TOOL_DIRS = [
+    "site-packages/clang_format/**",
+    "site-packages/clang_tidy/**",
+    "site-packages/bin/clang-*",
+]
+
 py_library(
     name = "pkgs",
     srcs = glob(
         ["site-packages/**/*.py"],
+        exclude = _NATIVE_TOOL_DIRS,
         allow_empty = True,
     ),
     data = glob(
@@ -81,10 +88,33 @@ py_library(
             "site-packages/**/*.py",
             "site-packages/**/__pycache__/**",
             "site-packages/**/*.pyc",
-        ],
+        ] + _NATIVE_TOOL_DIRS,
         allow_empty = True,
     ),
     imports = ["site-packages"],
+)
+
+# Native executables shipped inside PyPI wheels (e.g. the official LLVM
+# clang-format / clang-tidy wheels). They are exposed as plain files and kept
+# out of :pkgs so Python targets do not carry them in their runfiles.
+exports_files(
+    glob(
+        [
+            "site-packages/clang_format/data/bin/*",
+            "site-packages/clang_tidy/data/bin/*",
+        ],
+        allow_empty = True,
+    ),
+)
+
+# Full clang-tidy wheel payload: the binary plus its resource directory
+# (lib/clang/<ver>/include), which clang-tidy needs for builtin headers.
+filegroup(
+    name = "clang_tidy_data",
+    srcs = glob(
+        ["site-packages/clang_tidy/data/**"],
+        allow_empty = True,
+    ),
 )
 """
 

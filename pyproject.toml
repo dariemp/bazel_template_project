@@ -12,6 +12,10 @@ dependencies = [
     "ruff>=0.8",
     "black>=24.0",
     "mypy>=1.18",
+    # C/C++ tooling: official LLVM wheels, used by //tools/cpp (keep in sync
+    # with the zig/clang major where practical).
+    "clang-format==22.1.8",
+    "clang-tidy==22.1.8",
 ]
 
 [tool.black]

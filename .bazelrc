@@ -23,3 +23,14 @@ build:eslint --@aspect_rules_lint//lint:fail_on_violation
 
 # Show failing test output inline.
 test --test_output=errors
+
+# C/C++: zig cc (hermetic_cc_toolchain). Keep the C++17 default that the
+# previous LLVM toolchain set, and never fall back to a host compiler.
+build --cxxopt=-std=c++17
+build --host_cxxopt=-std=c++17
+common --repo_env=BAZEL_DO_NOT_DETECT_CPP_TOOLCHAIN=1
+# zig links libc++ statically into every output. With fastbuild's default
+# dynamic_mode, cc_test links each cc_library as its own .so, so libc++ ends up
+# in several DSOs and GoogleTest aborts at exit ("double free or corruption").
+# Link C/C++ binaries and tests fully statically instead.
+build --dynamic_mode=off

@@ -1,19 +1,23 @@
 load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
 load("@rules_python//python:defs.bzl", "py_binary")
+load(":zig_clang_tidy.bzl", "zig_clang_tidy")
 
 package(default_visibility = ["//visibility:public"])
 
-# clang-format / clang-tidy from the hermetic LLVM distribution (toolchains_llvm).
+# clang-format / clang-tidy from the official LLVM PyPI wheels, pinned in
+# requirements.txt and installed by uv into @uv_deps (tools/python/uv_pip.bzl).
 native_binary(
     name = "clang_format_bin",
-    src = "@llvm_toolchain_llvm//:bin/clang-format",
+    src = "@uv_deps//:site-packages/clang_format/data/bin/clang-format",
     out = "clang-format",
 )
 
-native_binary(
+# clang-tidy runs with the zig toolchain's target triple, libc and libc++
+# headers (see zig_clang_tidy.bzl); used by //tools/lint:linters.bzl.
+zig_clang_tidy(
     name = "clang_tidy",
-    src = "@llvm_toolchain_llvm//:bin/clang-tidy",
-    out = "clang-tidy",
+    clang_tidy = "@uv_deps//:site-packages/clang_tidy/data/bin/clang-tidy",
+    data = ["@uv_deps//:clang_tidy_data"],
 )
 
 py_binary(
