@@ -2,9 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main, lighter-cc-toolchain]
+    branches: [main]
   pull_request:
-  workflow_dispatch:
 
 jobs:
   hooks:
@@ -70,9 +69,10 @@ jobs:
       - name: "Tests (bazel test //...)"
         run: bazel run //tools:prek -- run tests --all-files
 
-  # Native macOS check for the zig cc toolchain and the PyPI clang tools.
+  # C/C++ on macOS: the zig cc toolchain and the PyPI clang-format/clang-tidy
+  # wheels, natively on Apple silicon (no Xcode SDK is used by the build).
   macos:
-    name: macOS (C/C++ + clang hooks)
+    name: "macOS: C/C++ build, test, clang-format, clang-tidy"
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
@@ -85,18 +85,6 @@ jobs:
 
       - name: "C/C++: build + test"
         run: bazel test //c/... //cpp/...
-
-      - name: "C/C++: toolchain diagnostics"
-        if: always()
-        run: |
-          xcode-select -p || true
-          bazel build //cpp/calculator:calculator --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type' 2>&1 | grep -i "selected" || true
-          bazel aquery 'mnemonic("CppCompile", //cpp/calculator:calculator)' | grep -E "Command Line|zig|isysroot|SDKs" || true
-          bazel build //cpp/calculator:calculator_test
-          bin="$(bazel cquery --output=files //cpp/calculator:calculator_test 2>/dev/null)"
-          file "$bin" || true
-          otool -L "$bin" || true
-          bazel aquery 'mnemonic("CppLink", //cpp/calculator:calculator_test)' | grep -E "isysroot|SDKs|-target|Command Line" || true
 
       - name: "C/C++: format (clang-format)"
         run: bazel run //tools:prek -- run clang-format --all-files
