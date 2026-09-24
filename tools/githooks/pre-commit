@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-# Git pre-commit entrypoint — runs tools/hooks.yaml via tools/run-hooks.sh.
-set -euo pipefail
-root="$(git rev-parse --show-toplevel)"
-exec "$root/tools/run-hooks.sh"

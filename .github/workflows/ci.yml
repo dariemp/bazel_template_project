@@ -7,7 +7,7 @@ on:
 
 jobs:
   hooks:
-    name: Hooks (Ruff / Black / format_lint / tests / build_checks)
+    name: prek hooks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,7 +18,31 @@ jobs:
           disk-cache: ${{ github.workflow }}
           repository-cache: true
 
-      # Same declarative checks as local pre-commit (tools/hooks.yaml):
-      # format_lint (Ruff format/check, Black) → tests (bazel test //...) → build_checks.
-      - name: Format / lint, tests, and build checks
-        run: ./tools/run-hooks.sh
+      # Pin prek to v0.5.3 (Rust binary; not the Python pre-commit package).
+      - name: Install prek
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+        with:
+          install-only: true
+          prek-version: "0.5.3"
+
+      # One GHA step per hook id from .pre-commit-config.yaml
+      - name: Format (Ruff)
+        run: prek run format-ruff --all-files
+
+      - name: Format (Black)
+        run: prek run format-black --all-files
+
+      - name: Lint (Ruff)
+        run: prek run lint-ruff --all-files
+
+      - name: Tests (Bazel)
+        run: prek run tests --all-files
+
+      - name: Buildifier
+        run: prek run buildifier --all-files
+
+      - name: gofmt
+        run: prek run gofmt --all-files
+
+      - name: Gazelle
+        run: prek run gazelle --all-files

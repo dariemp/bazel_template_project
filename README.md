@@ -1,6 +1,6 @@
 # bazel_template_project
 
-Template for a Bazel monorepo using **bzlmod**, with **Go** (`rules_go` + Gazelle), **Python** (`rules_python` + **uv** via `rules_uv` locking + a uv install repository), and **repo-native hooks** (YAML config + git hooks, mirrored in CI).
+Template for a Bazel monorepo using **bzlmod**, with **Go** (`rules_go` + Gazelle), **Python** (`rules_python` + **uv** via `rules_uv` locking + a uv install repository), and **prek** hooks (standard `.pre-commit-config.yaml`, mirrored in CI).
 
 ## Prerequisites
 
@@ -66,31 +66,44 @@ deps = ["@uv_deps//:pkgs"]
 
 `rules_uv` 0.88 provides locking and venv helpers only (no pip hub). The small `uv_pip_repository` rule fills that gap using the same uv release family as `rules_uv`.
 
-## Native pre-commit hooks
+## Pre-commit hooks (prek)
 
-This repo does **not** use the Python `pre-commit` package. Checks are declared in `tools/hooks.yaml` (sectioned) and run by `tools/run-hooks.sh`.
+This repo uses **[prek](https://github.com/j178/prek)** — a single Rust binary that understands the standard `.pre-commit-config.yaml` format — **not** the Python `pre-commit` package and **not** lefthook. Same discrete-hook config model, faster installs/CI, no Python runtime for the hook runner. Each check is its own hook (`repo: local` / `language: system`) calling hermetic Bazel targets (or `./tools/check-gofmt.sh`).
 
-Sections run in stable order:
+Hooks (in order):
 
-1. **format_lint** — Ruff format check, Ruff lint, Black check
-2. **tests** — full suite (`bazel test //...`)
-3. **build_checks** — buildifier, gofmt, gazelle diff
+1. **format-ruff** — `bazel run //:ruff -- format --check python tools`
+2. **format-black** — `bazel run //:black -- --check python tools`
+3. **lint-ruff** — `bazel run //:ruff -- check python tools`
+4. **tests** — `bazel test //...`
+5. **buildifier** — `bazel test //:buildifier_test`
+6. **gofmt** — `./tools/check-gofmt.sh`
+7. **gazelle** — `bazel run //:gazelle -- -mode=diff`
 
 ```bash
-# Install the git hook (sets core.hooksPath=tools/githooks)
-./tools/install-hooks.sh
+# Install prek (pinned example; see https://github.com/j178/prek/releases)
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/j178/prek/releases/download/v0.5.3/prek-installer.sh | sh
 
-# Run the same checks manually / in CI
-./tools/run-hooks.sh
+# Install the git pre-commit hook
+prek install
+# or: ./tools/install-prek-hooks.sh
+
+# Run all hooks (same as CI)
+prek run --all-files
+
+# Run one hook
+prek run format-ruff --all-files
+prek run lint-ruff --all-files
 ```
 
-Edit `tools/hooks.yaml` to add or change steps. CI (`.github/workflows/ci.yml`) runs the same script.
+Edit `.pre-commit-config.yaml` to add or change hooks. CI (`.github/workflows/ci.yml`) installs pinned prek **0.5.3** and runs each hook id as its own named step.
 
 ## Status
 
 - Go: `go.mod`, `go_sdk` / `go_deps` in `MODULE.bazel`, Gazelle-generated `//cmd/hello`.
 - Python: uv lock + uv runtime install (`@uv_deps`), sample `//python/greeting` with pytest, `whitespace_format` / `ruff` / `black` via uv site-packages.
-- Hooks + CI: YAML-driven native hooks with `format_lint` / `tests` / `build_checks` sections; no Python `pre-commit` dependency.
+- Hooks + CI: prek + discrete `.pre-commit-config.yaml` hooks (`format-ruff` / `format-black` / `lint-ruff` / `tests` / `buildifier` / `gofmt` / `gazelle`); no Python `pre-commit` dependency.
 - Optional owner action: mark this GitHub repo as a **Template repository** in Settings if you want the green “Use this template” button.
 
 `MODULE.bazel.lock` is tracked and should be committed when module deps change.

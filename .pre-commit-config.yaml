@@ -1,0 +1,60 @@
+# Discrete hooks for local git commits and CI.
+# Runner: prek (https://github.com/j178/prek) — Rust binary, drop-in compatible
+# with the standard pre-commit config format; no Python pre-commit package.
+#
+# Install:  curl .../v0.5.3/prek-installer.sh | sh   then  prek install
+#           (or ./tools/install-prek-hooks.sh)
+# Run all:  prek run --all-files
+# One hook: prek run format-ruff --all-files
+
+repos:
+  - repo: local
+    hooks:
+      - id: format-ruff
+        name: Format (Ruff)
+        language: system
+        entry: bazel run //:ruff -- format --check python tools
+        pass_filenames: false
+        always_run: true
+
+      - id: format-black
+        name: Format (Black)
+        language: system
+        entry: bazel run //:black -- --check python tools
+        pass_filenames: false
+        always_run: true
+
+      - id: lint-ruff
+        name: Lint (Ruff)
+        language: system
+        entry: bazel run //:ruff -- check python tools
+        pass_filenames: false
+        always_run: true
+
+      - id: tests
+        name: Tests (Bazel)
+        language: system
+        entry: bazel test //...
+        pass_filenames: false
+        always_run: true
+
+      - id: buildifier
+        name: Buildifier (Starlark)
+        language: system
+        entry: bazel test //:buildifier_test
+        pass_filenames: false
+        always_run: true
+
+      - id: gofmt
+        name: gofmt
+        language: system
+        entry: ./tools/check-gofmt.sh
+        pass_filenames: false
+        always_run: true
+
+      - id: gazelle
+        name: Gazelle (BUILD files up to date)
+        language: system
+        entry: bazel run //:gazelle -- -mode=diff
+        pass_filenames: false
+        always_run: true
