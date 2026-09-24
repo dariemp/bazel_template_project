@@ -26,3 +26,6 @@ build/
 
 # Go (lean; enable if you vendor)
 # /vendor/
+
+# Node / TypeScript (rules_js lays out node_modules under bazel-bin)
+node_modules/

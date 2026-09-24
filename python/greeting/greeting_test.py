@@ -5,11 +5,11 @@ import pytest
 from python.greeting.greeting import greet
 
 
-def test_default():
+def test_default() -> None:
     assert greet() == "hello, world"
 
 
-def test_name():
+def test_name() -> None:
     assert greet("bazel") == "hello, bazel"
 
 

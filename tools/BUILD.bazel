@@ -1,0 +1,24 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# Pinned prek release binary for the host platform (see MODULE.bazel).
+alias(
+    name = "prek_bin",
+    actual = select({
+        "//tools/platforms:linux_x86_64": "@prek_x86_64_unknown_linux_musl//:prek",
+        "//tools/platforms:linux_aarch64": "@prek_aarch64_unknown_linux_musl//:prek",
+        "//tools/platforms:macos_x86_64": "@prek_x86_64_apple_darwin//:prek",
+        "//tools/platforms:macos_aarch64": "@prek_aarch64_apple_darwin//:prek",
+    }),
+)
+
+# bazel run //tools:prek -- install
+# bazel run //tools:prek -- run --all-files
+py_binary(
+    name = "prek",
+    srcs = ["prek_main.py"],
+    args = ["$(rootpath :prek_bin)"],
+    data = [":prek_bin"],
+    main = "prek_main.py",
+)

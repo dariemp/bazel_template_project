@@ -1,0 +1,25 @@
+# Rust: rustfmt check and clippy lint via rules_rust aspects.
+#   bazel build --config=rustfmt //...
+#   bazel build --config=clippy //...
+build:rustfmt --aspects=@rules_rust//rust:defs.bzl%rustfmt_aspect
+build:rustfmt --output_groups=+rustfmt_checks
+build:rustfmt --@rules_rust//rust/settings:rustfmt.toml=//:rustfmt.toml
+
+build:clippy --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
+build:clippy --output_groups=+clippy_checks
+build:clippy --@rules_rust//rust/settings:clippy_flag=-Dwarnings
+
+# C/C++: clang-tidy via aspect_rules_lint (fails the build on any finding).
+#   bazel build --config=clang-tidy //...
+build:clang-tidy --aspects=//tools/lint:linters.bzl%clang_tidy
+build:clang-tidy --output_groups=rules_lint_human
+build:clang-tidy --@aspect_rules_lint//lint:fail_on_violation
+
+# TypeScript: ESLint (typescript-eslint) via aspect_rules_lint.
+#   bazel build --config=eslint //...
+build:eslint --aspects=//tools/lint:linters.bzl%eslint
+build:eslint --output_groups=rules_lint_human
+build:eslint --@aspect_rules_lint//lint:fail_on_violation
+
+# Show failing test output inline.
+test --test_output=errors

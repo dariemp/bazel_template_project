@@ -93,6 +93,9 @@ def _uv_pip_repository_impl(rctx):
     python = rctx.path(rctx.attr.python_interpreter)
     requirements = rctx.path(rctx.attr.requirements)
 
+    # Re-run the install whenever the lockfile changes.
+    rctx.watch(requirements)
+
     # Install locked deps into site-packages (runtime install via uv).
     result = rctx.execute(
         [

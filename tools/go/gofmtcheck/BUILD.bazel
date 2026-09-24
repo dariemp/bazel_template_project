@@ -1,0 +1,14 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "gofmtcheck_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/dariemp/bazel_template_project/tools/go/gofmtcheck",
+    visibility = ["//visibility:private"],
+)
+
+go_binary(
+    name = "gofmtcheck",
+    embed = [":gofmtcheck_lib"],
+    visibility = ["//visibility:public"],
+)

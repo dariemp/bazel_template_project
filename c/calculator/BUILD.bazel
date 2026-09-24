@@ -1,0 +1,22 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_library(
+    name = "calculator",
+    srcs = ["calculator.c"],
+    hdrs = ["calculator.h"],
+    copts = ["-std=c11"],
+    visibility = ["//visibility:public"],
+)
+
+# The library is plain C; the test harness is GoogleTest (C++).
+cc_test(
+    name = "calculator_test",
+    size = "small",
+    srcs = ["calculator_test.cc"],
+    deps = [
+        ":calculator",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,39 @@
+load("@aspect_rules_jest//jest:defs.bzl", "jest_test")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
+
+# ts_project runs tsc, so building these targets type-checks the sources.
+ts_project(
+    name = "calculator",
+    srcs = ["calculator.ts"],
+    declaration = True,
+    source_map = True,
+    transpiler = "tsc",
+    tsconfig = "//:tsconfig",
+    visibility = ["//visibility:public"],
+)
+
+ts_project(
+    name = "calculator_test_ts",
+    testonly = True,
+    srcs = ["calculator.test.ts"],
+    declaration = True,
+    source_map = True,
+    transpiler = "tsc",
+    tsconfig = "//:tsconfig",
+    deps = [
+        ":calculator",
+        "//:node_modules/@jest/globals",
+    ],
+)
+
+# Jest runs the compiled calculator.test.js.
+jest_test(
+    name = "calculator_test",
+    size = "small",
+    config = "jest.config.js",
+    data = [
+        ":calculator_test_ts",
+        "//:package_json",
+    ],
+    node_modules = "//:node_modules",
+)

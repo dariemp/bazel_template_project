@@ -1,0 +1,3 @@
+# pnpm settings (rules_js reads these alongside pnpm-lock.yaml).
+# No npm package needs install scripts (lifecycle hooks) for this repo.
+allowBuilds: {}

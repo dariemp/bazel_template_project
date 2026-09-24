@@ -12,37 +12,59 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Only host bootstrap: Bazelisk (reads .bazelversion). Every other tool,
+      # including prek itself, is fetched and pinned by Bazel (MODULE.bazel).
       - uses: bazel-contrib/setup-bazel@0.15.0
         with:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
           repository-cache: true
 
-      # Pin prek to v0.5.3 (Rust binary; not the Python pre-commit package).
-      - name: Install prek
-        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
-        with:
-          install-only: true
-          prek-version: "0.5.3"
+      # One GHA step per hook id from .pre-commit-config.yaml.
+      - name: "Python: format (Ruff)"
+        run: bazel run //tools:prek -- run format-ruff --all-files
 
-      # One GHA step per hook id from .pre-commit-config.yaml
-      - name: Format (Ruff)
-        run: prek run format-ruff --all-files
+      - name: "Python: format (Black)"
+        run: bazel run //tools:prek -- run format-black --all-files
 
-      - name: Format (Black)
-        run: prek run format-black --all-files
+      - name: "Python: lint (Ruff)"
+        run: bazel run //tools:prek -- run lint-ruff --all-files
 
-      - name: Lint (Ruff)
-        run: prek run lint-ruff --all-files
+      - name: "Python: type check (mypy)"
+        run: bazel run //tools:prek -- run typecheck-mypy --all-files
 
-      - name: Tests (Bazel)
-        run: prek run tests --all-files
+      - name: "Go: format (gofmt)"
+        run: bazel run //tools:prek -- run gofmt --all-files
 
-      - name: Buildifier
-        run: prek run buildifier --all-files
+      - name: "Go: vet (nogo)"
+        run: bazel run //tools:prek -- run go-vet --all-files
 
-      - name: gofmt
-        run: prek run gofmt --all-files
+      - name: "Go: Gazelle"
+        run: bazel run //tools:prek -- run gazelle --all-files
 
-      - name: Gazelle
-        run: prek run gazelle --all-files
+      - name: "TypeScript: format (Prettier)"
+        run: bazel run //tools:prek -- run format-prettier --all-files
+
+      - name: "TypeScript: lint (ESLint)"
+        run: bazel run //tools:prek -- run lint-eslint --all-files
+
+      - name: "TypeScript: type check (tsc)"
+        run: bazel run //tools:prek -- run typecheck-tsc --all-files
+
+      - name: "Rust: format (rustfmt)"
+        run: bazel run //tools:prek -- run rustfmt --all-files
+
+      - name: "Rust: lint (Clippy)"
+        run: bazel run //tools:prek -- run clippy --all-files
+
+      - name: "C/C++: format (clang-format)"
+        run: bazel run //tools:prek -- run clang-format --all-files
+
+      - name: "C/C++: lint (clang-tidy)"
+        run: bazel run //tools:prek -- run clang-tidy --all-files
+
+      - name: "Starlark: Buildifier"
+        run: bazel run //tools:prek -- run buildifier --all-files
+
+      - name: "Tests (bazel test //...)"
+        run: bazel run //tools:prek -- run tests --all-files

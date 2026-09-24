@@ -1,0 +1,9 @@
+# Prettier checks TypeScript/JavaScript and JSON configs only.
+/bazel-*
+node_modules/
+*.md
+*.yaml
+*.yml
+MODULE.bazel.lock
+.ruff_cache/
+.mypy_cache/

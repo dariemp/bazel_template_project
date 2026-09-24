@@ -11,6 +11,7 @@ dependencies = [
     "whitespace-format==0.0.8",
     "ruff>=0.8",
     "black>=24.0",
+    "mypy>=1.18",
 ]
 
 [tool.black]
@@ -20,3 +21,14 @@ line-length = 88
 [tool.ruff]
 target-version = "py313"
 line-length = 88
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+explicit_package_bases = true
+exclude = ["^bazel-"]
+
+# Third-party packages without type information.
+[[tool.mypy.overrides]]
+module = ["whitespace_format", "whitespace_format.*"]
+ignore_missing_imports = true

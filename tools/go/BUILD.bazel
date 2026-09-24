@@ -1,0 +1,9 @@
+load("@rules_go//go:def.bzl", "nogo")
+
+# Static analysis for all Go code in this repo: `go vet` analyzers run as part
+# of every Go compile (wired via go_sdk.nogo in MODULE.bazel).
+nogo(
+    name = "nogo",
+    vet = True,
+    visibility = ["//visibility:public"],
+)

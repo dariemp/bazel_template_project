@@ -1,60 +1,132 @@
 # Discrete hooks for local git commits and CI.
-# Runner: prek (https://github.com/j178/prek) — Rust binary, drop-in compatible
-# with the standard pre-commit config format; no Python pre-commit package.
+# Runner: prek (https://github.com/j178/prek), a Rust binary that reads the
+# standard pre-commit config format. It is fetched and pinned by Bazel
+# (MODULE.bazel -> //tools:prek); no Python pre-commit package, no host installs.
 #
-# Install:  curl .../v0.5.3/prek-installer.sh | sh   then  prek install
-#           (or ./tools/install-prek-hooks.sh)
-# Run all:  prek run --all-files
-# One hook: prek run format-ruff --all-files
+# Every hook calls Bazel; all tools (formatters, linters, checkers, test
+# frameworks) are Bazel-managed external repositories.
+#
+# Install git hook:  bazel run //tools:prek -- install
+# Run all:           bazel run //tools:prek -- run --all-files
+# One hook:          bazel run //tools:prek -- run format-ruff --all-files
 
 repos:
   - repo: local
     hooks:
+      # ---- Python --------------------------------------------------------
       - id: format-ruff
-        name: Format (Ruff)
+        name: "Python: format (Ruff)"
         language: system
         entry: bazel run //:ruff -- format --check python tools
         pass_filenames: false
         always_run: true
 
       - id: format-black
-        name: Format (Black)
+        name: "Python: format (Black)"
         language: system
         entry: bazel run //:black -- --check python tools
         pass_filenames: false
         always_run: true
 
       - id: lint-ruff
-        name: Lint (Ruff)
+        name: "Python: lint (Ruff)"
         language: system
         entry: bazel run //:ruff -- check python tools
         pass_filenames: false
         always_run: true
 
-      - id: tests
-        name: Tests (Bazel)
+      - id: typecheck-mypy
+        name: "Python: type check (mypy)"
         language: system
-        entry: bazel test //...
+        entry: bazel run //:mypy -- python tools
         pass_filenames: false
         always_run: true
 
+      # ---- Go ------------------------------------------------------------
+      - id: gofmt
+        name: "Go: format (gofmt)"
+        language: system
+        entry: bazel run //tools/go/gofmtcheck
+        pass_filenames: false
+        always_run: true
+
+      - id: go-vet
+        name: "Go: vet (nogo)"
+        language: system
+        entry: bazel build //cmd/... //pkg/... //tools/go/...
+        pass_filenames: false
+        always_run: true
+
+      - id: gazelle
+        name: "Go: Gazelle (BUILD files up to date)"
+        language: system
+        entry: bazel run //:gazelle -- -mode=diff
+        pass_filenames: false
+        always_run: true
+
+      # ---- TypeScript ----------------------------------------------------
+      - id: format-prettier
+        name: "TypeScript: format (Prettier)"
+        language: system
+        entry: bazel run //tools/js:prettier -- --check .
+        pass_filenames: false
+        always_run: true
+
+      - id: lint-eslint
+        name: "TypeScript: lint (ESLint)"
+        language: system
+        entry: bazel build --config=eslint //...
+        pass_filenames: false
+        always_run: true
+
+      - id: typecheck-tsc
+        name: "TypeScript: type check (tsc)"
+        language: system
+        entry: bazel build //typescript/...
+        pass_filenames: false
+        always_run: true
+
+      # ---- Rust ----------------------------------------------------------
+      - id: rustfmt
+        name: "Rust: format (rustfmt)"
+        language: system
+        entry: bazel build --config=rustfmt //...
+        pass_filenames: false
+        always_run: true
+
+      - id: clippy
+        name: "Rust: lint (Clippy)"
+        language: system
+        entry: bazel build --config=clippy //...
+        pass_filenames: false
+        always_run: true
+
+      # ---- C / C++ -------------------------------------------------------
+      - id: clang-format
+        name: "C/C++: format (clang-format)"
+        language: system
+        entry: bazel run //tools/cpp:clang_format
+        pass_filenames: false
+        always_run: true
+
+      - id: clang-tidy
+        name: "C/C++: lint + static analysis (clang-tidy)"
+        language: system
+        entry: bazel build --config=clang-tidy //...
+        pass_filenames: false
+        always_run: true
+
+      # ---- Starlark + tests ----------------------------------------------
       - id: buildifier
-        name: Buildifier (Starlark)
+        name: "Starlark: Buildifier"
         language: system
         entry: bazel test //:buildifier_test
         pass_filenames: false
         always_run: true
 
-      - id: gofmt
-        name: gofmt
+      - id: tests
+        name: "Tests (bazel test //...)"
         language: system
-        entry: ./tools/check-gofmt.sh
-        pass_filenames: false
-        always_run: true
-
-      - id: gazelle
-        name: Gazelle (BUILD files up to date)
-        language: system
-        entry: bazel run //:gazelle -- -mode=diff
+        entry: bazel test //...
         pass_filenames: false
         always_run: true

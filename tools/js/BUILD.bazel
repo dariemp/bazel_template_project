@@ -1,0 +1,15 @@
+load("@aspect_rules_js//js:defs.bzl", "js_binary")
+load("@npm//:eslint/package_json.bzl", eslint_bin = "bin")
+
+package(default_visibility = ["//visibility:public"])
+
+# ESLint (typescript-eslint), used by the lint aspect in //tools/lint:linters.bzl.
+eslint_bin.eslint_binary(name = "eslint")
+
+# Prettier, run against the source tree:
+#   bazel run //tools/js:prettier -- --check .
+js_binary(
+    name = "prettier",
+    data = ["//:node_modules/prettier"],
+    entry_point = "prettier_main.cjs",
+)

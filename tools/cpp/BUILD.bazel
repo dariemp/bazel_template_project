@@ -1,0 +1,25 @@
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+# clang-format / clang-tidy from the hermetic LLVM distribution (toolchains_llvm).
+native_binary(
+    name = "clang_format_bin",
+    src = "@llvm_toolchain_llvm//:bin/clang-format",
+    out = "clang-format",
+)
+
+native_binary(
+    name = "clang_tidy",
+    src = "@llvm_toolchain_llvm//:bin/clang-tidy",
+    out = "clang-tidy",
+)
+
+py_binary(
+    name = "clang_format",
+    srcs = ["clang_format_main.py"],
+    args = ["$(rootpath :clang_format_bin)"],
+    data = [":clang_format_bin"],
+    main = "clang_format_main.py",
+)

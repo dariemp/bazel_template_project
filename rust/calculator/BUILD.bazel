@@ -1,0 +1,15 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+rust_library(
+    name = "calculator",
+    srcs = ["lib.rs"],
+    edition = "2021",
+    visibility = ["//visibility:public"],
+)
+
+# Runs the #[cfg(test)] unit tests inside lib.rs.
+rust_test(
+    name = "calculator_test",
+    crate = ":calculator",
+    edition = "2021",
+)

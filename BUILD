@@ -1,5 +1,8 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_ts//ts:defs.bzl", "ts_config")
 load("@buildifier_prebuilt//:rules.bzl", "buildifier", "buildifier_test")
 load("@gazelle//:def.bzl", "gazelle")
+load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
@@ -37,6 +40,13 @@ py_binary(
 )
 
 py_binary(
+    name = "mypy",
+    srcs = ["//tools/python:mypy_main.py"],
+    main = "mypy_main.py",
+    deps = ["@uv_deps//:pkgs"],
+)
+
+py_binary(
     name = "black",
     srcs = ["//tools/python:black_main.py"],
     main = "black_main.py",
@@ -57,4 +67,42 @@ buildifier_test(
     lint_mode = "warn",
     no_sandbox = True,
     workspace = "//:BUILD",
+)
+
+# TypeScript: link npm packages from pnpm-lock.yaml into bazel-bin/node_modules.
+npm_link_all_packages(name = "node_modules")
+
+ts_config(
+    name = "tsconfig",
+    src = "tsconfig.json",
+    visibility = ["//visibility:public"],
+)
+
+js_library(
+    name = "eslintrc",
+    srcs = ["eslint.config.mjs"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@eslint/js",
+        ":node_modules/typescript-eslint",
+    ],
+)
+
+# Root package.json in runfiles: Jest walks up from the runfiles root looking for it.
+js_library(
+    name = "package_json",
+    srcs = ["package.json"],
+    visibility = ["//visibility:public"],
+)
+
+exports_files(
+    [
+        ".clang-tidy",
+        ".prettierrc.json",
+        "eslint.config.mjs",
+        "package.json",
+        "rustfmt.toml",
+        "tsconfig.json",
+    ],
+    visibility = ["//visibility:public"],
 )
