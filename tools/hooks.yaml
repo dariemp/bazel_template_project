@@ -1,0 +1,22 @@
+# Declarative checks for local pre-commit and CI.
+# Run:  ./tools/run-hooks.sh
+# Install git hook: ./tools/install-hooks.sh
+#
+# Each hook needs: id, name, command (shell string run from repo root).
+
+hooks:
+  - id: bazel-test
+    name: Bazel test
+    command: bazel test //...
+
+  - id: buildifier
+    name: Buildifier (Starlark)
+    command: bazel test //:buildifier_test
+
+  - id: gofmt
+    name: gofmt check
+    command: ./tools/check-gofmt.sh
+
+  - id: gazelle
+    name: Gazelle BUILD files up to date
+    command: bazel run //:gazelle -- -mode=diff
