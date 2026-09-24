@@ -1,4 +1,6 @@
 # Python tooling helpers (uv-based install, console-script launchers).
 exports_files([
     "whitespace_format_main.py",
+    "ruff_main.py",
+    "black_main.py",
 ])

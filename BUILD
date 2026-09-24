@@ -21,11 +21,25 @@ create_venv(
     requirements_txt = "//:requirements.txt",
 )
 
-# Console script from uv-installed site-packages (@uv_deps), not @pypi.
+# Console scripts from uv-installed site-packages (@uv_deps), not @pypi.
 py_binary(
     name = "whitespace_format",
     srcs = ["//tools/python:whitespace_format_main.py"],
     main = "whitespace_format_main.py",
+    deps = ["@uv_deps//:pkgs"],
+)
+
+py_binary(
+    name = "ruff",
+    srcs = ["//tools/python:ruff_main.py"],
+    main = "ruff_main.py",
+    deps = ["@uv_deps//:pkgs"],
+)
+
+py_binary(
+    name = "black",
+    srcs = ["//tools/python:black_main.py"],
+    main = "black_main.py",
     deps = ["@uv_deps//:pkgs"],
 )
 

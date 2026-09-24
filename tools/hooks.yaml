@@ -2,13 +2,28 @@
 # Run:  ./tools/run-hooks.sh
 # Install git hook: ./tools/install-hooks.sh
 #
+# Sections run in stable order: format_lint → tests → build_checks (then any others).
 # Each hook needs: id, name, command (shell string run from repo root).
 
-hooks:
+format_lint:
+  - id: ruff-format
+    name: Ruff format check
+    command: bazel run //:ruff -- format --check python tools
+
+  - id: ruff-check
+    name: Ruff lint
+    command: bazel run //:ruff -- check python tools
+
+  - id: black
+    name: Black check
+    command: bazel run //:black -- --check python tools
+
+tests:
   - id: bazel-test
-    name: Bazel test
+    name: Bazel test suite
     command: bazel test //...
 
+build_checks:
   - id: buildifier
     name: Buildifier (Starlark)
     command: bazel test //:buildifier_test

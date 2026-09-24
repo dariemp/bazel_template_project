@@ -33,6 +33,13 @@ bazel run //:create_venv
 # Optional whitespace formatter (console script from uv site-packages)
 bazel run //:whitespace_format -- --help
 
+# Ruff / Black (hermetic via @uv_deps)
+bazel run //:ruff -- --help
+bazel run //:black -- --help
+bazel run //:ruff -- format --check python tools
+bazel run //:ruff -- check python tools
+bazel run //:black -- --check python tools
+
 # Format Starlark / check formatting
 bazel run //:buildifier
 bazel test //:buildifier_test
@@ -49,6 +56,7 @@ This repo does **not** use `rules_python` `pip.parse` / `@pypi` for installing p
 | Install for Bazel targets | `uv pip install --target` via repository rule `//tools/python:uv_pip.bzl` → `@uv_deps//:pkgs` |
 | Dev / editor venv | `rules_uv` `create_venv` (`bazel run //:create_venv` → `.venv/`) |
 | Tests | `pytest` on `@uv_deps//:pkgs`; `py_test` calls `pytest.main` |
+| Format / lint | `ruff` + `black` console scripts via `@uv_deps` (`//:ruff`, `//:black`) |
 
 Depend on third-party packages from `py_library` / `py_binary` / `py_test` with:
 
@@ -60,7 +68,13 @@ deps = ["@uv_deps//:pkgs"]
 
 ## Native pre-commit hooks
 
-This repo does **not** use the Python `pre-commit` package. Checks are declared in `tools/hooks.yaml` and run by `tools/run-hooks.sh`.
+This repo does **not** use the Python `pre-commit` package. Checks are declared in `tools/hooks.yaml` (sectioned) and run by `tools/run-hooks.sh`.
+
+Sections run in stable order:
+
+1. **format_lint** — Ruff format check, Ruff lint, Black check
+2. **tests** — full suite (`bazel test //...`)
+3. **build_checks** — buildifier, gofmt, gazelle diff
 
 ```bash
 # Install the git hook (sets core.hooksPath=tools/githooks)
@@ -70,13 +84,13 @@ This repo does **not** use the Python `pre-commit` package. Checks are declared 
 ./tools/run-hooks.sh
 ```
 
-Edit `tools/hooks.yaml` to add or change steps (bazel test, buildifier, gofmt, gazelle diff, …). CI (`.github/workflows/ci.yml`) runs the same script.
+Edit `tools/hooks.yaml` to add or change steps. CI (`.github/workflows/ci.yml`) runs the same script.
 
 ## Status
 
 - Go: `go.mod`, `go_sdk` / `go_deps` in `MODULE.bazel`, Gazelle-generated `//cmd/hello`.
-- Python: uv lock + uv runtime install (`@uv_deps`), sample `//python/greeting` with pytest, `whitespace_format` via uv site-packages.
-- Hooks + CI: YAML-driven native hooks; no Python `pre-commit` dependency.
+- Python: uv lock + uv runtime install (`@uv_deps`), sample `//python/greeting` with pytest, `whitespace_format` / `ruff` / `black` via uv site-packages.
+- Hooks + CI: YAML-driven native hooks with `format_lint` / `tests` / `build_checks` sections; no Python `pre-commit` dependency.
 - Optional owner action: mark this GitHub repo as a **Template repository** in Settings if you want the green “Use this template” button.
 
 `MODULE.bazel.lock` is tracked and should be committed when module deps change.
