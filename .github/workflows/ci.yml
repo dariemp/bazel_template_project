@@ -2,8 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, lighter-cc-toolchain]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   hooks:
@@ -57,6 +58,15 @@ jobs:
       - name: "Rust: lint (Clippy)"
         run: bazel run //tools:prek -- run clippy --all-files
 
+      - name: "C/C++: toolchain diagnostics"
+        if: always()
+        run: |
+          xcode-select -p || true
+          bazel build //cpp/calculator:calculator --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type' 2>&1 | grep -i "selected" || true
+          bazel aquery 'mnemonic("CppCompile", //cpp/calculator:calculator)' | grep -E "Command Line|zig|isysroot|SDKs" || true
+          file bazel-bin/cpp/calculator/calculator_test || true
+          otool -L bazel-bin/cpp/calculator/calculator_test || true
+
       - name: "C/C++: format (clang-format)"
         run: bazel run //tools:prek -- run clang-format --all-files
 
@@ -68,3 +78,25 @@ jobs:
 
       - name: "Tests (bazel test //...)"
         run: bazel run //tools:prek -- run tests --all-files
+
+  # Native macOS check for the zig cc toolchain and the PyPI clang tools.
+  macos:
+    name: macOS (C/C++ + clang hooks)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}-macos
+          repository-cache: true
+
+      - name: "C/C++: build + test"
+        run: bazel test //c/... //cpp/...
+
+      - name: "C/C++: format (clang-format)"
+        run: bazel run //tools:prek -- run clang-format --all-files
+
+      - name: "C/C++: lint (clang-tidy)"
+        run: bazel run //tools:prek -- run clang-tidy --all-files
