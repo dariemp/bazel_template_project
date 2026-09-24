@@ -1,6 +1,6 @@
 # bazel_template_project
 
-Template for a Bazel monorepo using **bzlmod**, with **Go** (`rules_go` + Gazelle), **Python** (`rules_python` + `rules_uv`), and **repo-native hooks** (YAML config + git hooks, mirrored in CI).
+Template for a Bazel monorepo using **bzlmod**, with **Go** (`rules_go` + Gazelle), **Python** (`rules_python` + **uv** via `rules_uv` locking + a uv install repository), and **repo-native hooks** (YAML config + git hooks, mirrored in CI).
 
 ## Prerequisites
 
@@ -21,19 +21,42 @@ bazel test //cmd/hello:hello_test
 # Regenerate BUILD files for Go packages
 bazel run //:gazelle
 
-# Python sample
+# Python sample (pytest via bazel test; deps from uv-installed @uv_deps)
 bazel test //python/greeting:greeting_test
 
-# Regenerate Python requirements.txt from pyproject.toml
+# Regenerate Python requirements.txt from pyproject.toml (rules_uv + uv)
 bazel run //:generate_requirements_txt
 
-# Optional whitespace formatter (PyPI console script via rules_python)
+# Optional local IDE venv (same lockfile; not used by bazel test/build)
+bazel run //:create_venv
+
+# Optional whitespace formatter (console script from uv site-packages)
 bazel run //:whitespace_format -- --help
 
 # Format Starlark / check formatting
 bazel run //:buildifier
 bazel test //:buildifier_test
 ```
+
+## Python + uv
+
+This repo does **not** use `rules_python` `pip.parse` / `@pypi` for installing packages.
+
+| Concern | Tool |
+| --- | --- |
+| Declare deps | `pyproject.toml` |
+| Lock | `rules_uv` `pip_compile` → `requirements.txt` (`bazel run //:generate_requirements_txt`) |
+| Install for Bazel targets | `uv pip install --target` via repository rule `//tools/python:uv_pip.bzl` → `@uv_deps//:pkgs` |
+| Dev / editor venv | `rules_uv` `create_venv` (`bazel run //:create_venv` → `.venv/`) |
+| Tests | `pytest` on `@uv_deps//:pkgs`; `py_test` calls `pytest.main` |
+
+Depend on third-party packages from `py_library` / `py_binary` / `py_test` with:
+
+```starlark
+deps = ["@uv_deps//:pkgs"]
+```
+
+`rules_uv` 0.88 provides locking and venv helpers only (no pip hub). The small `uv_pip_repository` rule fills that gap using the same uv release family as `rules_uv`.
 
 ## Native pre-commit hooks
 
@@ -52,7 +75,7 @@ Edit `tools/hooks.yaml` to add or change steps (bazel test, buildifier, gofmt, g
 ## Status
 
 - Go: `go.mod`, `go_sdk` / `go_deps` in `MODULE.bazel`, Gazelle-generated `//cmd/hello`.
-- Python: `rules_uv` lock (`requirements.txt`), sample `//python/greeting`, `whitespace_format` via `py_console_script_binary`.
+- Python: uv lock + uv runtime install (`@uv_deps`), sample `//python/greeting` with pytest, `whitespace_format` via uv site-packages.
 - Hooks + CI: YAML-driven native hooks; no Python `pre-commit` dependency.
 - Optional owner action: mark this GitHub repo as a **Template repository** in Settings if you want the green “Use this template” button.
 

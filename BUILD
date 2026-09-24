@@ -1,21 +1,32 @@
 load("@buildifier_prebuilt//:rules.bzl", "buildifier", "buildifier_test")
 load("@gazelle//:def.bzl", "gazelle")
-load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
+load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
+load("@rules_uv//uv:venv.bzl", "create_venv")
 
 # gazelle:prefix github.com/dariemp/bazel_template_project
 gazelle(name = "gazelle")
 
+# Lock: pyproject.toml -> requirements.txt via uv (rules_uv).
 pip_compile(
     name = "generate_requirements_txt",
     requirements_in = "//:pyproject.toml",
     requirements_txt = "//:requirements.txt",
 )
 
-py_console_script_binary(
+# Dev / IDE venv (optional): bazel run //:create_venv
+create_venv(
+    name = "create_venv",
+    destination_folder = ".venv",
+    requirements_txt = "//:requirements.txt",
+)
+
+# Console script from uv-installed site-packages (@uv_deps), not @pypi.
+py_binary(
     name = "whitespace_format",
-    pkg = "@pypi//whitespace_format",
-    script = "whitespace-format",
+    srcs = ["//tools/python:whitespace_format_main.py"],
+    main = "whitespace_format_main.py",
+    deps = ["@uv_deps//:pkgs"],
 )
 
 buildifier(

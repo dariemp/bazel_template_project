@@ -1,17 +1,17 @@
-"""Tests for the greeting sample."""
+"""Pytest tests for the greeting sample (run via bazel test)."""
 
-import unittest
+import pytest
 
 from python.greeting.greeting import greet
 
 
-class GreetingTest(unittest.TestCase):
-    def test_default(self):
-        self.assertEqual(greet(), "hello, world")
+def test_default():
+    assert greet() == "hello, world"
 
-    def test_name(self):
-        self.assertEqual(greet("bazel"), "hello, bazel")
+
+def test_name():
+    assert greet("bazel") == "hello, bazel"
 
 
 if __name__ == "__main__":
-    unittest.main()
+    raise SystemExit(pytest.main([__file__, "-v"]))

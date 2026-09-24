@@ -13,5 +13,8 @@ py_library(
 py_test(
     name = "greeting_test",
     srcs = ["greeting_test.py"],
-    deps = [":greeting"],
+    deps = [
+        ":greeting",
+        "@uv_deps//:pkgs",
+    ],
 )

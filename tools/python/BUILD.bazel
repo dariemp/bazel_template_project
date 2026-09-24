@@ -1,0 +1,4 @@
+# Python tooling helpers (uv-based install, console-script launchers).
+exports_files([
+    "whitespace_format_main.py",
+])

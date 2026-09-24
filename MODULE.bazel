@@ -20,16 +20,20 @@ go_deps.from_file(go_mod = "//:go.mod")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 
-pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-
 PYTHON_VERSION = "3.13"
 
 python.defaults(python_version = PYTHON_VERSION)
 python.toolchain(python_version = PYTHON_VERSION)
 
-pip.parse(
-    hub_name = "pypi",
-    python_version = PYTHON_VERSION,
-    requirements_lock = "//:requirements.txt",
+# Host interpreter for repository-rule evaluation (uv pip install).
+use_repo(python, "python_3_13", "python_3_13_host")
+
+# Runtime Python packages: install with uv (not rules_python pip.parse / @pypi).
+# Locking stays on rules_uv pip_compile -> requirements.txt.
+uv_pip_repository = use_repo_rule("//tools/python:uv_pip.bzl", "uv_pip_repository")
+
+uv_pip_repository(
+    name = "uv_deps",
+    python_interpreter = "@python_3_13_host//:python",
+    requirements = "//:requirements.txt",
 )
-use_repo(pip, "pypi")
