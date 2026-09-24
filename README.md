@@ -515,20 +515,21 @@ hits.
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes to `main` (and to the
-`lighter-cc-toolchain` branch), on pull requests, and on demand
-(`workflow_dispatch`).
+`.github/workflows/ci.yml` runs on pushes to `main` and on pull requests. It
+has two jobs that run in parallel:
 
 - **`hooks` (ubuntu-latest):** checkout, then `bazel-contrib/setup-bazel`
   (Bazelisk plus disk, repository, and Bazelisk caches) as the only host setup.
   Then one step per hook id, each running
   `bazel run //tools:prek -- run <hook-id> --all-files`, so a failure points
   straight at the check that broke.
-- **`macos` (macos-latest, arm64):** `bazel test //c/... //cpp/...`, a
-  diagnostics step (selected C++ toolchain, compile/link command lines, and
-  `otool -L` of a test binary), then the `clang-format` and `clang-tidy` hooks.
+- **`macos` (macos-latest, arm64):** the same Bazelisk setup, then
+  `bazel test //c/... //cpp/...` and the `clang-format` and `clang-tidy` hooks.
+  This is the permanent check that the zig cc toolchain and the PyPI clang
+  wheels work natively on macOS. The other languages run only on Linux.
 
-When you add a hook, add a matching step to the `hooks` job.
+When you add a hook, add a matching step to the `hooks` job (and to the `macos`
+job if it is C/C++-specific or platform-sensitive).
 
 ## Adding a language or tool
 
