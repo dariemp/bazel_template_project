@@ -168,14 +168,28 @@ else
 fi
 lang=c
 args=()
+tmp_files=()
 for a in "$@"; do
   case "$a" in
     -xc++ | *.cc | *.cpp | *.cxx | *.hh | *.hpp) lang=c++ ;;
   esac
+  # zig spells CPU names with underscores (the macOS arm64 toolchain adds
+  # -mcpu=apple_m1); clang rejects those, so translate to clang's spelling.
+  # aspect_rules_lint passes the compiler flags in a params file (@file).
   case "$a" in
-    # zig spells CPU names with underscores (the macOS arm64 toolchain adds
-    # -mcpu=apple_m1); clang rejects those, so translate to clang's spelling.
     -mcpu=*_*) a="$(printf '%s' "$a" | tr '_' '-')" ;;
+    @*)
+      f="${{a#@}}"
+      if [[ -f "$f" ]] && grep -q -e '-mcpu=.*_' "$f"; then
+        grep -q -e '-xc++' "$f" && lang=c++
+        t="$(mktemp "${{TMPDIR:-/tmp}}/clang_tidy_params.XXXXXX")"
+        sed -e '/-mcpu=/y/_/-/' "$f" >"$t"
+        tmp_files+=("$t")
+        a="@$t"
+      elif [[ -f "$f" ]] && grep -q -e '-xc++' "$f"; then
+        lang=c++
+      fi
+      ;;
   esac
   args+=("$a")
 done
@@ -183,7 +197,12 @@ extra=({common})
 if [[ $lang == c++ ]]; then
   extra+=({cxx})
 fi
-exec "$R/{clang_tidy}" "${{extra[@]}}" "${{args[@]}}"
+rc=0
+"$R/{clang_tidy}" "${{extra[@]}}" "${{args[@]}}" || rc=$?
+if [[ ${{#tmp_files[@]}} -gt 0 ]]; then
+  rm -f "${{tmp_files[@]}}"
+fi
+exit "$rc"
 """.format(
             zigtarget = toolchain_id,
             common = _extra(common),
