@@ -14,4 +14,4 @@ Checks: >
   -readability-identifier-length,
   -readability-magic-numbers
 WarningsAsErrors: "*"
-HeaderFilterRegex: "^(c|cpp)/.*"
+HeaderFilterRegex: "(^|/)(c|cpp)/"
