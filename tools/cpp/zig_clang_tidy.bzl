@@ -169,28 +169,45 @@ fi
 lang=c
 args=()
 tmp_files=()
+
+# zig spells CPU names with underscores (the macOS arm64 toolchain adds
+# -mcpu=apple_m1); clang rejects those, so translate to clang's spelling.
+# aspect_rules_lint passes the compiler flags in a file (`--config <file>`),
+# so rewrite a copy of that file too. Sets $out to the path to use.
+fix_flag_file() {{
+  out="$1"
+  [[ -f "$1" ]] || return 0
+  if grep -q -e '-xc++' "$1"; then
+    lang=c++
+  fi
+  if grep -q -e '-mcpu=.*_' "$1"; then
+    out="$(mktemp "${{TMPDIR:-/tmp}}/clang_tidy_flags.XXXXXX")"
+    sed -e '/-mcpu=/y/_/-/' "$1" >"$out"
+    tmp_files+=("$out")
+  fi
+}}
+
+next_is_file=0
 for a in "$@"; do
-  case "$a" in
-    -xc++ | *.cc | *.cpp | *.cxx | *.hh | *.hpp) lang=c++ ;;
-  esac
-  # zig spells CPU names with underscores (the macOS arm64 toolchain adds
-  # -mcpu=apple_m1); clang rejects those, so translate to clang's spelling.
-  # aspect_rules_lint passes the compiler flags in a params file (@file).
-  case "$a" in
-    -mcpu=*_*) a="$(printf '%s' "$a" | tr '_' '-')" ;;
-    @*)
-      f="${{a#@}}"
-      if [[ -f "$f" ]] && grep -q -e '-mcpu=.*_' "$f"; then
-        grep -q -e '-xc++' "$f" && lang=c++
-        t="$(mktemp "${{TMPDIR:-/tmp}}/clang_tidy_params.XXXXXX")"
-        sed -e '/-mcpu=/y/_/-/' "$f" >"$t"
-        tmp_files+=("$t")
-        a="@$t"
-      elif [[ -f "$f" ]] && grep -q -e '-xc++' "$f"; then
-        lang=c++
-      fi
-      ;;
-  esac
+  if [[ $next_is_file == 1 ]]; then
+    next_is_file=0
+    fix_flag_file "$a"
+    a="$out"
+  else
+    case "$a" in
+      -xc++ | *.cc | *.cpp | *.cxx | *.hh | *.hpp) lang=c++ ;;
+      -mcpu=*_*) a="$(printf '%s' "$a" | tr '_' '-')" ;;
+      --config) next_is_file=1 ;;
+      --config=*)
+        fix_flag_file "${{a#--config=}}"
+        a="--config=$out"
+        ;;
+      @*)
+        fix_flag_file "${{a#@}}"
+        a="@$out"
+        ;;
+    esac
+  fi
   args+=("$a")
 done
 extra=({common})
