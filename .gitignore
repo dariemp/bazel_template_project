@@ -1,0 +1,28 @@
+# Bazel output symlinks and convenience links (workspace root)
+/bazel-*
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Go (lean; enable if you vendor)
+# /vendor/
