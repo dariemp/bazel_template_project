@@ -92,11 +92,11 @@ jobs:
           xcode-select -p || true
           bazel build //cpp/calculator:calculator --toolchain_resolution_debug='@bazel_tools//tools/cpp:toolchain_type' 2>&1 | grep -i "selected" || true
           bazel aquery 'mnemonic("CppCompile", //cpp/calculator:calculator)' | grep -E "Command Line|zig|isysroot|SDKs" || true
-          file bazel-bin/cpp/calculator/calculator_test || true
-          otool -L bazel-bin/cpp/calculator/calculator_test || true
-          bash --version | head -1
-          bazel build //tools/cpp:clang_tidy && cat bazel-bin/tools/cpp/clang_tidy
-          bazel-bin/tools/cpp/clang_tidy c/calculator/calculator.c -- -xc -std=c11 -mcpu=apple_m1 -iquote . -v || true
+          bazel build //cpp/calculator:calculator_test
+          bin="$(bazel cquery --output=files //cpp/calculator:calculator_test 2>/dev/null)"
+          file "$bin" || true
+          otool -L "$bin" || true
+          bazel aquery 'mnemonic("CppLink", //cpp/calculator:calculator_test)' | grep -E "isysroot|SDKs|-target|Command Line" || true
 
       - name: "C/C++: format (clang-format)"
         run: bazel run //tools:prek -- run clang-format --all-files

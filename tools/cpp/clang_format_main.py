@@ -17,7 +17,9 @@ def _sources(root: str) -> list[str]:
         dirnames[:] = sorted(
             d
             for d in dirnames
-            if not (d.startswith("bazel-") or d in (".git", "node_modules"))
+            # Skip Bazel output links, VCS metadata, hidden dirs (e.g. the
+            # .venv from `bazel run //:create_venv`), and vendored trees.
+            if not (d.startswith(("bazel-", ".")) or d in ("node_modules", "venv"))
         )
         found.extend(
             os.path.relpath(os.path.join(dirpath, f), root)
