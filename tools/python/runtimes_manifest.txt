@@ -1,0 +1,23 @@
+# python-build-standalone 20260924 builds of CPython 3.13.15 (from the release SHA256SUMS).
+# rules_python 2.3.4 only ships up to 3.13.13; see python.override in MODULE.bazel.
+565f264bb6d315e255bb5339cbc3e677cc83fbbbecdf4ec37de439d14b552e04  20260924/cpython-3.13.15+20260924-aarch64-apple-darwin-freethreaded-install_only.tar.gz
+a18e1d1b6067d39cf7b2b605fdb78ad6b8a3aed221c44ef934d399dccf355453  20260924/cpython-3.13.15+20260924-aarch64-apple-darwin-install_only.tar.gz
+b4f2d4a6988726d63a7757b14a08017e278b7a4a4a0c5c6b24a01d9cc4f6cb47  20260924/cpython-3.13.15+20260924-aarch64-pc-windows-msvc-freethreaded-install_only.tar.gz
+7299105677eb0833e20badb56ee07c9b79c2184b071b06a132ab02a5ff64852a  20260924/cpython-3.13.15+20260924-aarch64-pc-windows-msvc-install_only.tar.gz
+3b076866284d6e99e68d377eb6d72620a305f597e5b9b1c356658173ba5cfc77  20260924/cpython-3.13.15+20260924-aarch64-unknown-linux-gnu-freethreaded-install_only.tar.gz
+c8dd48f5e5be632b518a79076189419cb8591559959ec137e4d30f5ce143c04d  20260924/cpython-3.13.15+20260924-aarch64-unknown-linux-gnu-install_only.tar.gz
+bfcca4ab6c2550715846a59579aaf51047e7ea013e5e393d27ca9636cd05b8d9  20260924/cpython-3.13.15+20260924-i686-pc-windows-msvc-freethreaded-install_only.tar.gz
+cf1a8ce1def96a33b2172329b5200054598f1d110f0a8537279c19bafd239861  20260924/cpython-3.13.15+20260924-i686-pc-windows-msvc-install_only.tar.gz
+fc39f2742b8ea91aa07d45d4a5c003306ef917522e290a7078d2d35cfae90143  20260924/cpython-3.13.15+20260924-ppc64le-unknown-linux-gnu-freethreaded-install_only.tar.gz
+fecf0cd0756d370641f8ff203be8c5e4db7b0490307aa3327642416dec9ce3b1  20260924/cpython-3.13.15+20260924-ppc64le-unknown-linux-gnu-install_only.tar.gz
+50c33a5eeb2597d197d07556d2c3d9137896115ce8e8deb2590e3cee7f3ece6e  20260924/cpython-3.13.15+20260924-riscv64-unknown-linux-gnu-freethreaded-install_only.tar.gz
+3ee84a5f6c156b4b64416b788df67a3a7297089c155028632d64adfb5d509dbc  20260924/cpython-3.13.15+20260924-riscv64-unknown-linux-gnu-install_only.tar.gz
+7195b73473d4e8eb69c9fbc5a1c9c0797d647fd910ad019835a9f744ae091141  20260924/cpython-3.13.15+20260924-s390x-unknown-linux-gnu-freethreaded-install_only.tar.gz
+d95ce8c4abd54713696c0df7c4a4f96c23efc2adbd861dc96194d3de463744b9  20260924/cpython-3.13.15+20260924-s390x-unknown-linux-gnu-install_only.tar.gz
+3b4d3dc5bcbf1f363ca0887e6f456cf57cd031899ae1051960f5fbc8a13d0760  20260924/cpython-3.13.15+20260924-x86_64-apple-darwin-freethreaded-install_only.tar.gz
+f445e867ad221c006af745bc0e8d2c168149e14fe194abef1d7ac0da9a4c9de1  20260924/cpython-3.13.15+20260924-x86_64-apple-darwin-install_only.tar.gz
+56b0958d2f44191846d6a1a0bd2a1c9fe7ace8a6118cf60de3a1a5d5c2f8daf5  20260924/cpython-3.13.15+20260924-x86_64-pc-windows-msvc-freethreaded-install_only.tar.gz
+cc5e5a61adbe02ae93e01a90c4b0718cc119d86cb6fa855441ff5c606b6dd6f4  20260924/cpython-3.13.15+20260924-x86_64-pc-windows-msvc-install_only.tar.gz
+c5ddf363a54fb36e0f857c1f26dc1e541a8f1cf15af7e92e27fc99d182b27c40  20260924/cpython-3.13.15+20260924-x86_64-unknown-linux-gnu-freethreaded-install_only.tar.gz
+c20e1ff8600a0241849588b36948942eaccdc80da34df69674f3784a687197de  20260924/cpython-3.13.15+20260924-x86_64-unknown-linux-gnu-install_only.tar.gz
+e943ca78b0f150ba1aa64de62badc6bced1451b658ccb466e9341d632cf9b520  20260924/cpython-3.13.15+20260924-x86_64-unknown-linux-musl-install_only.tar.gz

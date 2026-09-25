@@ -1,34 +1,34 @@
 """Install PyPI packages with uv into an external repository for rules_python.
 
-rules_uv 0.88 provides pip_compile (locking) and create_venv (dev venvs) but
+rules_uv 0.89 provides pip_compile (locking) and create_venv (dev venvs) but
 does not replace rules_python pip.parse hubs. This repository rule uses the
 same uv binary family as rules_uv to install a locked requirements.txt into a
 site-packages tree that py_library / py_binary / py_test can depend on via
 @uv_deps//:pkgs.
 """
 
-_UV_VERSION = "0.8.11"
+_UV_VERSION = "0.12.19"
 
-# Mirrors @rules_uv//uv/private:uv.lock.json (rules_uv 0.88.0).
+# Keep in sync with //tools/python:uv.lock.json (overrides rules_uv's uv).
 _UV_BINARIES = {
     "linux_x86_64": {
         "url": "https://github.com/astral-sh/uv/releases/download/{v}/uv-x86_64-unknown-linux-gnu.tar.gz".format(v = _UV_VERSION),
-        "sha256": "0c6078318332c100d7d9988ea99144b534e40adef2958aa314a9f7c7b8516ed7",
+        "sha256": "23bf5552d220e0842b65c862097b2ebaeba0064b74eda5e565e77fd25969d8c8",
         "file": "uv-x86_64-unknown-linux-gnu/uv",
     },
     "linux_arm64": {
         "url": "https://github.com/astral-sh/uv/releases/download/{v}/uv-aarch64-unknown-linux-musl.tar.gz".format(v = _UV_VERSION),
-        "sha256": "1c6045bec4d5ca17777dd271401a0407c5acad79f74fd38f35c31ca64c689808",
+        "sha256": "ad8d8448a2ff642ba62c2f684d7dd22a03f8eb3fc9918c2c3e8ec975f4ed6710",
         "file": "uv-aarch64-unknown-linux-musl/uv",
     },
     "darwin_x86_64": {
         "url": "https://github.com/astral-sh/uv/releases/download/{v}/uv-x86_64-apple-darwin.tar.gz".format(v = _UV_VERSION),
-        "sha256": "7ed76b0cc314fa0cb6dd7ae99379efd3cf8fc14d71af8d71b0b5238582c7958d",
+        "sha256": "cb5fa57bafe68fc0fb94b17f06bee0b0b9a7feb94ccbd110445afa0696e39273",
         "file": "uv-x86_64-apple-darwin/uv",
     },
     "darwin_arm64": {
         "url": "https://github.com/astral-sh/uv/releases/download/{v}/uv-aarch64-apple-darwin.tar.gz".format(v = _UV_VERSION),
-        "sha256": "c9e74f779a65798057bca2ff328d5c9952f458391e220c3d3216d7a03a338d9f",
+        "sha256": "a9a8df1eedeb192f2e47e40e2faabfb387db4b850209118786d42f89dde3e0ba",
         "file": "uv-aarch64-apple-darwin/uv",
     },
 }

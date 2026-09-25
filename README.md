@@ -1,6 +1,6 @@
 # bazel_template_project
 
-A template for a polyglot **Bazel monorepo** (Bazel 8.7.0, bzlmod). Python, Go,
+A template for a polyglot **Bazel monorepo** (Bazel 9.2.0, bzlmod). Python, Go,
 TypeScript, Rust, C, and C++ are built, formatted, linted, type-checked, and
 tested through Bazel. Every tool (compilers, SDKs, formatters, linters, test
 frameworks, and the [prek](https://github.com/j178/prek) hook runner) is a
@@ -30,7 +30,7 @@ languages you don't need, and replace the `calculator` examples with real code.
 
 | Tool | Why |
 | --- | --- |
-| [Bazelisk](https://github.com/bazelbuild/bazelisk), installed as `bazel` | Reads `.bazelversion` (8.7.0) and downloads that Bazel release. The hooks call `bazel` from `PATH`. |
+| [Bazelisk](https://github.com/bazelbuild/bazelisk), installed as `bazel` | Reads `.bazelversion` (9.2.0) and downloads that Bazel release. The hooks call `bazel` from `PATH`. |
 | `git` | Source control; prek installs its hook into `.git/hooks`. |
 | `bash` and basic POSIX utilities (`grep`, `sed`, `tr`, `mktemp`) | Used by Bazel-generated launcher scripts and the clang-tidy wrappers. Present on every Linux distribution and on macOS. |
 
@@ -104,12 +104,12 @@ tested by `//python/calculator:calculator_test` (pytest, parametrized). An older
 
 | Concern | Tool (version) | Where Bazel gets it |
 | --- | --- | --- |
-| Interpreter | CPython 3.13.9 | `rules_python` 1.7.0 hermetic toolchain |
-| Formatters | Ruff format 0.16.8, Black 26.5.1 | PyPI, installed by uv into `@uv_deps` |
-| Linter | Ruff 0.16.8 | PyPI via `@uv_deps` |
+| Interpreter | CPython 3.13.15 | `rules_python` 2.3.4 hermetic toolchain (3.13.15 builds added via `tools/python/runtimes_manifest.txt`) |
+| Formatters | Ruff format 0.16.9, Black 26.5.1 | PyPI, installed by uv into `@uv_deps` |
+| Linter | Ruff 0.16.9 | PyPI via `@uv_deps` |
 | Static checker | mypy 2.3.1 (`strict = true`) | PyPI via `@uv_deps` |
 | Tests | pytest 9.1.1 | PyPI via `@uv_deps` |
-| Locking | uv (`pip_compile`) | `rules_uv` 0.88.0 |
+| Locking | uv 0.12.19 (`pip_compile`) | `rules_uv` 0.89.2, uv pinned by `tools/python/uv.lock.json` (rules_multitool) |
 
 Dependencies are **not** managed with `rules_python`'s `pip.parse`/`@pypi`. The
 flow is:
@@ -118,7 +118,7 @@ flow is:
 2. Lock them into `requirements.txt` (with hashes, for every platform) with
    `bazel run //:generate_requirements_txt`. `bazel test //...` includes
    `//:generate_requirements_txt_test`, which fails when the lock is stale.
-3. The repository rule in `tools/python/uv_pip.bzl` downloads uv 0.8.11 and runs
+3. The repository rule in `tools/python/uv_pip.bzl` downloads uv 0.12.19 and runs
    `uv pip install --target` with the hermetic interpreter, producing
    `@uv_deps//:pkgs`. Python targets depend on that one `py_library`.
 
@@ -164,7 +164,7 @@ test (`//cmd/hello:hello_test`).
 
 | Concern | Tool (version) | Where Bazel gets it |
 | --- | --- | --- |
-| SDK | Go 1.25.0 (from the `go` line in `go.mod`) | `rules_go` 0.63.0 `go_sdk.from_file` |
+| SDK | Go 1.26.8 (from the `go` line in `go.mod`) | `rules_go` 0.63.0 `go_sdk.from_file` |
 | Formatter | gofmt rules via `go/format` | `//tools/go/gofmtcheck`, built with the Bazel Go SDK |
 | Linter / static checker | `go vet` analyzers through **nogo** | `rules_go` (`//tools/go:nogo`), runs during every Go compile |
 | BUILD files | Gazelle 0.54.0 | `gazelle` module |
@@ -217,11 +217,11 @@ that runs the compiled `calculator.test.js`.
 
 | Concern | Tool (version) | Where Bazel gets it |
 | --- | --- | --- |
-| Runtime | Node.js 24.18.0 | `rules_nodejs` 6.7.5 toolchain |
+| Runtime | Node.js 24.21.0 | `rules_nodejs` 6.7.5 toolchain |
 | Packages | pnpm 10 lockfile (`pnpm-lock.yaml`) | `aspect_rules_js` 3.4.1 `npm_translate_lock` |
 | Formatter | Prettier 3.9.9 | npm via `aspect_rules_js` (`//tools/js:prettier`) |
-| Linter | ESLint 9.39.5 + typescript-eslint 8.70.1 (`strictTypeChecked`, `stylisticTypeChecked`) | npm, run by an `aspect_rules_lint` 2.9.0 aspect |
-| Static checker | TypeScript 5.9.3 (`tsc`, `strict`) | `aspect_rules_ts` 3.10.1, version read from `package.json` |
+| Linter | ESLint 10.11.0 + typescript-eslint 8.70.1 (`strictTypeChecked`, `stylisticTypeChecked`) | npm, run by an `aspect_rules_lint` 2.9.0 aspect |
+| Static checker | TypeScript 6.0.3 (`tsc`, `strict`) | `aspect_rules_ts` 3.10.1, version read from `package.json` |
 | Tests | Jest 30.5.2 | `aspect_rules_jest` 0.26.0 |
 
 **Build and test**
@@ -258,8 +258,9 @@ find bazel-bin/ -name '*AspectRulesLintESLint.patch' -size +0 -exec patch -p1 -i
   ```
 
   Reference packages from BUILD files as `//:node_modules/<name>`.
-- ESLint is pinned to 9.x because the `aspect_rules_lint` ESLint formatter
-  still needs ESLint 9.
+- ESLint 10 no longer depends on `chalk`, but the `aspect_rules_lint` ESLint
+  formatter still requires it (aspect-build/rules_lint#969), so `chalk` 4 is a
+  dev dependency and a `data` dep of `//tools/js:eslint`.
 - Prettier checks the whole repo except what `.prettierignore` and `.gitignore`
   exclude (Markdown and YAML are excluded on purpose). ESLint and tsc cover
   every `ts_project` automatically, so new directories need no hook changes.
@@ -273,7 +274,7 @@ whose `#[cfg(test)]` unit tests run as `//rust/calculator:calculator_test`.
 
 | Concern | Tool (version) | Where Bazel gets it |
 | --- | --- | --- |
-| Toolchain | rustc 1.98.0 (stable) | `rules_rust` 0.74.0 `rust.toolchain` |
+| Toolchain | rustc 1.98.1 (stable) | `rules_rust` 0.74.0 `rust.toolchain` |
 | Formatter | rustfmt (from the same toolchain), `rustfmt.toml` | `rules_rust` `rustfmt_aspect` |
 | Linter / static checker | Clippy 0.1.98 with `-D warnings` | `rules_rust` `rust_clippy_aspect` |
 | Tests | built-in `#[test]` | `rust_test` |
@@ -468,7 +469,7 @@ use it (see above). macOS x86_64 is registered but not tested in CI.
 ## Starlark
 
 `BUILD.bazel`, `.bzl`, and `MODULE.bazel` files are formatted and linted by
-Buildifier 8.5.1 (`buildifier_prebuilt` 8.5.1.4).
+Buildifier 10.1.0 (`buildifier_prebuilt` 10.1.0).
 
 | Hook id | Underlying command | Auto-fix |
 | --- | --- | --- |
